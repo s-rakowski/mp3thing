@@ -16,101 +16,6 @@
 #define CHANNELS 8
 #define NONOTE 0xFFFF
 
-typedef struct {
-  char name[22];
-  uint16_t length;
-  int8_t fineTune;
-  uint8_t volume;
-  uint16_t loopBegin;
-  uint16_t loopLength;
-} 
-Sample;
-
-struct {
-  char name[20];
-  Sample samples[SAMPLES];
-  uint8_t songLength;
-  uint8_t numberOfPatterns;
-  uint8_t order[128];
-  uint8_t numberOfChannels;
-} 
-Mod;
-
-typedef struct {
-  uint8_t sampleNumber[ROWS][CHANNELS];
-  uint16_t note[ROWS][CHANNELS];
-  uint8_t effectNumber[ROWS][CHANNELS];
-  uint8_t effectParameter[ROWS][CHANNELS];
-} 
-Pattern;
-
-struct {
-  Pattern currentPattern;
-
-  UINT amiga;
-  uint16_t samplesPerTick;
-  uint8_t speed;
-  uint8_t tick;
-  uint8_t row;
-  uint8_t lastRow;
-
-  uint8_t orderIndex;
-  uint8_t oldOrderIndex;
-  uint8_t patternDelay;
-  uint8_t patternLoopCount[CHANNELS];
-  uint8_t patternLoopRow[CHANNELS];
-
-  uint8_t lastSampleNumber[CHANNELS];
-  int8_t volume[CHANNELS];
-  uint16_t lastNote[CHANNELS];
-  uint16_t amigaPeriod[CHANNELS];
-  int16_t lastAmigaPeriod[CHANNELS];
-
-  uint16_t portamentoNote[CHANNELS];
-  uint8_t portamentoSpeed[CHANNELS];
-
-  uint8_t waveControl[CHANNELS];
-
-  uint8_t vibratoSpeed[CHANNELS];
-  uint8_t vibratoDepth[CHANNELS];
-  int8_t vibratoPos[CHANNELS];
-
-  uint8_t tremoloSpeed[CHANNELS];
-  uint8_t tremoloDepth[CHANNELS];
-  int8_t tremoloPos[CHANNELS];
-} 
-Player;
-
-struct {
-  UINT sampleBegin[SAMPLES];
-  UINT sampleEnd[SAMPLES];
-  UINT sampleloopBegin[SAMPLES];
-  uint16_t sampleLoopLength[SAMPLES];
-  UINT sampleLoopEnd[SAMPLES];
-
-  uint8_t channelSampleNumber[CHANNELS];
-  UINT channelSampleOffset[CHANNELS];
-  uint16_t channelFrequency[CHANNELS];
-  uint8_t channelVolume[CHANNELS];
-  uint8_t channelPanning[CHANNELS];
-} 
-Mixer;
-
-struct {
-  uint8_t channels[CHANNELS][FATBUFFERSIZE];
-  UINT samplePointer[CHANNELS];
-  uint8_t channelSampleNumber[CHANNELS];
-} 
-FatBuffer;
-
-struct {
-  uint16_t left[SOUNDBUFFERSIZE];
-  uint16_t right[SOUNDBUFFERSIZE];
-  uint16_t writePos;
-  volatile uint16_t readPos;
-} 
-SoundBuffer;
-
 // Effects
 #define ARPEGGIO              0x0
 #define PORTAMENTOUP          0x1
@@ -210,71 +115,163 @@ static const uint8_t sine[64] = {
   180, 161, 141, 120,  97,  74,  49,  24
 };
 
+class MOD_Sample {
+  public:
+  char name[22];
+  uint16_t length;
+  int8_t fineTune;
+  uint8_t volume;
+  uint16_t loopBegin;
+  uint16_t loopLength;
+};
+
+class MOD_Pattern {
+  public:
+  uint8_t sampleNumber[ROWS][CHANNELS];
+  uint16_t note[ROWS][CHANNELS];
+  uint8_t effectNumber[ROWS][CHANNELS];
+  uint8_t effectParameter[ROWS][CHANNELS];
+};
+
+class MOD_FatBuffer {
+  public:
+  uint8_t channels[CHANNELS][FATBUFFERSIZE];
+  UINT samplePointer[CHANNELS];
+  uint8_t channelSampleNumber[CHANNELS];
+};
+
+class MOD_SoundBuffer {
+  public:
+  uint16_t left[SOUNDBUFFERSIZE];
+  uint16_t right[SOUNDBUFFERSIZE];
+  uint16_t writePos;
+  volatile uint16_t readPos;
+}; 
+
+class MOD_Player
+{
+  public:
+//MOD
+  char name[20];
+  MOD_Sample samples[SAMPLES];
+  uint8_t songLength;
+  uint8_t numberOfPatterns;
+  uint8_t order[128];
+  uint8_t numberOfChannels;
+
+  MOD_Pattern currentPattern;
+  MOD_FatBuffer FatBuffer;
+  MOD_SoundBuffer SoundBuffer;
+
+  UINT amiga;
+  uint16_t samplesPerTick;
+  uint8_t speed;
+  uint8_t tick;
+  uint8_t row;
+  uint8_t lastRow;
+
+  uint8_t orderIndex;
+  uint8_t oldOrderIndex;
+  uint8_t patternDelay;
+  uint8_t patternLoopCount[CHANNELS];
+  uint8_t patternLoopRow[CHANNELS];
+
+  uint8_t lastSampleNumber[CHANNELS];
+  int8_t volume[CHANNELS];
+  uint16_t lastNote[CHANNELS];
+  uint16_t amigaPeriod[CHANNELS];
+  int16_t lastAmigaPeriod[CHANNELS];
+
+  uint16_t portamentoNote[CHANNELS];
+  uint8_t portamentoSpeed[CHANNELS];
+
+  uint8_t waveControl[CHANNELS];
+
+  uint8_t vibratoSpeed[CHANNELS];
+  uint8_t vibratoDepth[CHANNELS];
+  int8_t vibratoPos[CHANNELS];
+
+  uint8_t tremoloSpeed[CHANNELS];
+  uint8_t tremoloDepth[CHANNELS];
+  int8_t tremoloPos[CHANNELS];
+
+//MIXER
+  UINT sampleBegin[SAMPLES];
+  UINT sampleEnd[SAMPLES];
+  UINT sampleloopBegin[SAMPLES];
+  uint16_t sampleLoopLength[SAMPLES];
+  UINT sampleLoopEnd[SAMPLES];
+
+  uint8_t channelSampleNumber[CHANNELS];
+  UINT channelSampleOffset[CHANNELS];
+  uint16_t channelFrequency[CHANNELS];
+  uint8_t channelVolume[CHANNELS];
+  uint8_t channelPanning[CHANNELS];
 
 void loadHeader() {
   UINT count;
   uint8_t i;
   char temp[4];
 
-  f_read(&file, Mod.name, 20, &count);
+  f_read(&file, name, 20, &count);
 
   for(i = 0; i < SAMPLES; i++) {
-    f_read(&file, Mod.samples[i].name, 22, &count);
+    f_read(&file, samples[i].name, 22, &count);
     f_read(&file, temp, 2, &count);
-    Mod.samples[i].length = word(temp[0], temp[1]) * 2;
-    f_read(&file, &Mod.samples[i].fineTune, 1, &count);
-    if(Mod.samples[i].fineTune > 7) Mod.samples[i].fineTune -= 16;
-    f_read(&file, &Mod.samples[i].volume, 1, &count);
+    samples[i].length = word(temp[0], temp[1]) * 2;
+    f_read(&file, &samples[i].fineTune, 1, &count);
+    if(samples[i].fineTune > 7) samples[i].fineTune -= 16;
+    f_read(&file, &samples[i].volume, 1, &count);
     f_read(&file, temp, 2, &count);
-    Mod.samples[i].loopBegin = word(temp[0], temp[1]) * 2;
+    samples[i].loopBegin = word(temp[0], temp[1]) * 2;
     f_read(&file, temp, 2, &count);
-    Mod.samples[i].loopLength = word(temp[0], temp[1]) * 2;
-    if(Mod.samples[i].loopBegin + Mod.samples[i].loopLength > Mod.samples[i].length)
-      Mod.samples[i].loopLength = Mod.samples[i].length - Mod.samples[i].loopBegin;
+    samples[i].loopLength = word(temp[0], temp[1]) * 2;
+    if(samples[i].loopBegin + samples[i].loopLength > samples[i].length)
+      samples[i].loopLength = samples[i].length - samples[i].loopBegin;
   }
 
-  f_read(&file, &Mod.songLength, 1, &count);
+  f_read(&file, &songLength, 1, &count);
   f_read(&file, temp, 1, &count); // Discard this byte
 
-  Mod.numberOfPatterns = 0;
+  numberOfPatterns = 0;
   for(i = 0; i < 128; i++) {
-    f_read(&file, &Mod.order[i], 1, &count);
-    if(Mod.order[i] > Mod.numberOfPatterns)
-      Mod.numberOfPatterns = Mod.order[i];
+    f_read(&file, &order[i], 1, &count);
+    if(order[i] > numberOfPatterns)
+      numberOfPatterns = order[i];
   }
-  Mod.numberOfPatterns++;
+  numberOfPatterns++;
 
   // Offset 1080
   f_read(&file, temp, 4, &count);
 
   if(!strncmp(temp + 1, "CHN", 3))
-    Mod.numberOfChannels = temp[0] - '0';
+    numberOfChannels = temp[0] - '0';
   else if(!strncmp(temp + 2, "CH", 2))
-    Mod.numberOfChannels = (temp[0] - '0') * 10 + temp[1] - '0';
+    numberOfChannels = (temp[0] - '0') * 10 + temp[1] - '0';
   else
-    Mod.numberOfChannels = 4;
+    numberOfChannels = 4;
 }
 
 void loadSamples() {
   uint8_t i;
-  UINT fileOffset = 1084 + Mod.numberOfPatterns * ROWS * Mod.numberOfChannels * 4 - 1;
+  UINT fileOffset = 1084 + numberOfPatterns * ROWS * numberOfChannels * 4 - 1;
 
   for(i = 0; i < SAMPLES; i++) {
 
-    if(Mod.samples[i].length) {
-      Mixer.sampleBegin[i] = fileOffset;
-      Mixer.sampleEnd[i] = fileOffset + Mod.samples[i].length;
-      if(Mod.samples[i].loopLength > 2) {
-        Mixer.sampleloopBegin[i] = fileOffset + Mod.samples[i].loopBegin;
-        Mixer.sampleLoopLength[i] = Mod.samples[i].loopLength;
-        Mixer.sampleLoopEnd[i] = Mixer.sampleloopBegin[i] + Mixer.sampleLoopLength[i];
+    if(samples[i].length) {
+      sampleBegin[i] = fileOffset;
+      sampleEnd[i] = fileOffset + samples[i].length;
+      if(samples[i].loopLength > 2) {
+        sampleloopBegin[i] = fileOffset + samples[i].loopBegin;
+        sampleLoopLength[i] = samples[i].loopLength;
+        sampleLoopEnd[i] = sampleloopBegin[i] + sampleLoopLength[i];
       } 
       else {
-        Mixer.sampleloopBegin[i] = 0;
-        Mixer.sampleLoopLength[i] = 0;
-        Mixer.sampleLoopEnd[i] = 0;
+        sampleloopBegin[i] = 0;
+        sampleLoopLength[i] = 0;
+        sampleLoopEnd[i] = 0;
       }
-      fileOffset += Mod.samples[i].length;
+      fileOffset += samples[i].length;
     }
 
   }
@@ -288,56 +285,56 @@ void loadPattern(uint8_t pattern) {
   static uint8_t temp[4];
   static uint16_t amigaPeriod;
 
-  f_lseek(&file, 1084 + pattern * ROWS * Mod.numberOfChannels * 4);
+  f_lseek(&file, 1084 + pattern * ROWS * numberOfChannels * 4);
 
   for(row = 0; row < ROWS; row++) {
-    for(channel = 0; channel < Mod.numberOfChannels; channel++) {
+    for(channel = 0; channel < numberOfChannels; channel++) {
 
       f_read(&file, temp, 4, &count);
 
-      Player.currentPattern.sampleNumber[row][channel] = (temp[0] & 0xF0) + (temp[2] >> 4);
+      currentPattern.sampleNumber[row][channel] = (temp[0] & 0xF0) + (temp[2] >> 4);
 
       amigaPeriod = ((temp[0] & 0xF) << 8) + temp[1];
-      Player.currentPattern.note[row][channel] = NONOTE;
+      currentPattern.note[row][channel] = NONOTE;
       for(i = 1; i < 37; i++)
         if(amigaPeriod > amigaPeriods[i * 8] - 3 &&
           amigaPeriod < amigaPeriods[i * 8] + 3)
-          Player.currentPattern.note[row][channel] = i * 8;
+          currentPattern.note[row][channel] = i * 8;
 
-      Player.currentPattern.effectNumber[row][channel] = temp[2] & 0xF;
-      Player.currentPattern.effectParameter[row][channel] = temp[3];
+      currentPattern.effectNumber[row][channel] = temp[2] & 0xF;
+      currentPattern.effectParameter[row][channel] = temp[3];
 
     }
   }
 }
 
 void portamento(uint8_t channel) {
-  if(Player.lastAmigaPeriod[channel] < Player.portamentoNote[channel]) {
-    Player.lastAmigaPeriod[channel] += Player.portamentoSpeed[channel];
-    if(Player.lastAmigaPeriod[channel] > Player.portamentoNote[channel])
-      Player.lastAmigaPeriod[channel] = Player.portamentoNote[channel];
+  if(lastAmigaPeriod[channel] < portamentoNote[channel]) {
+    lastAmigaPeriod[channel] += portamentoSpeed[channel];
+    if(lastAmigaPeriod[channel] > portamentoNote[channel])
+      lastAmigaPeriod[channel] = portamentoNote[channel];
   }
-  if(Player.lastAmigaPeriod[channel] > Player.portamentoNote[channel]) {
-    Player.lastAmigaPeriod[channel] -= Player.portamentoSpeed[channel];
-    if(Player.lastAmigaPeriod[channel] < Player.portamentoNote[channel])
-      Player.lastAmigaPeriod[channel] = Player.portamentoNote[channel];
+  if(lastAmigaPeriod[channel] > portamentoNote[channel]) {
+    lastAmigaPeriod[channel] -= portamentoSpeed[channel];
+    if(lastAmigaPeriod[channel] < portamentoNote[channel])
+      lastAmigaPeriod[channel] = portamentoNote[channel];
   }
-  Mixer.channelFrequency[channel] = Player.amiga / Player.lastAmigaPeriod[channel];
+  channelFrequency[channel] = amiga / lastAmigaPeriod[channel];
 }
 
 void vibrato(uint8_t channel) {
   uint16_t delta;
   uint16_t temp;
 
-  temp = Player.vibratoPos[channel] & 31;
+  temp = vibratoPos[channel] & 31;
 
-  switch(Player.waveControl[channel] & 3) {
+  switch(waveControl[channel] & 3) {
   case 0:
     delta = sine[temp];
     break;
   case 1:
     temp <<= 3;
-    if(Player.vibratoPos[channel] < 0)
+    if(vibratoPos[channel] < 0)
       temp = 255 - temp;
     delta = temp;
     break;
@@ -349,31 +346,31 @@ void vibrato(uint8_t channel) {
     break;
   }
 
-  delta *= Player.vibratoDepth[channel];
+  delta *= vibratoDepth[channel];
   delta >>= 7;
 
-  if(Player.vibratoPos[channel] >= 0)
-    Mixer.channelFrequency[channel] = Player.amiga / (Player.lastAmigaPeriod[channel] + delta);
+  if(vibratoPos[channel] >= 0)
+    channelFrequency[channel] = amiga / (lastAmigaPeriod[channel] + delta);
   else
-    Mixer.channelFrequency[channel] = Player.amiga / (Player.lastAmigaPeriod[channel] - delta);
+    channelFrequency[channel] = amiga / (lastAmigaPeriod[channel] - delta);
 
-  Player.vibratoPos[channel] += Player.vibratoSpeed[channel];
-  if(Player.vibratoPos[channel] > 31) Player.vibratoPos[channel] -= 64;
+  vibratoPos[channel] += vibratoSpeed[channel];
+  if(vibratoPos[channel] > 31) vibratoPos[channel] -= 64;
 }
 
 void tremolo(uint8_t channel) {
   uint16_t delta;
   uint16_t temp;
 
-  temp = Player.tremoloPos[channel] & 31;
+  temp = tremoloPos[channel] & 31;
 
-  switch(Player.waveControl[channel] & 3) {
+  switch(waveControl[channel] & 3) {
   case 0:
     delta = sine[temp];
     break;
   case 1:
     temp <<= 3;
-    if(Player.tremoloPos[channel] < 0)
+    if(tremoloPos[channel] < 0)
       temp = 255 - temp;
     delta = temp;
     break;
@@ -385,20 +382,20 @@ void tremolo(uint8_t channel) {
     break;
   }
 
-  delta *= Player.tremoloDepth[channel];
+  delta *= tremoloDepth[channel];
   delta >>= 6;
 
-  if(Player.tremoloPos[channel] >= 0) {
-    if(Player.volume[channel] + delta > 64) delta = 64 - Player.volume[channel];
-    Mixer.channelVolume[channel] = Player.volume[channel] + delta;
+  if(tremoloPos[channel] >= 0) {
+    if(volume[channel] + delta > 64) delta = 64 - volume[channel];
+    channelVolume[channel] = volume[channel] + delta;
   } 
   else {
-    if(Player.volume[channel] - delta < 0) delta = Player.volume[channel];
-    Mixer.channelVolume[channel] = Player.volume[channel] - delta;
+    if(volume[channel] - delta < 0) delta = volume[channel];
+    channelVolume[channel] = volume[channel] - delta;
   }
 
-  Player.tremoloPos[channel] += Player.tremoloSpeed[channel];
-  if(Player.tremoloPos[channel] > 31) Player.tremoloPos[channel] -= 64;
+  tremoloPos[channel] += tremoloSpeed[channel];
+  if(tremoloPos[channel] > 31) tremoloPos[channel] -= 64;
 }
 
 void processRow() {
@@ -413,89 +410,89 @@ void processRow() {
   static uint8_t effectParameterY;
   static uint16_t sampleOffset;
 
-  Player.lastRow = Player.row++;
+  lastRow = row++;
   jumpFlag = false;
   breakFlag = false;
-  for(channel = 0; channel < Mod.numberOfChannels; channel++) {
+  for(channel = 0; channel < numberOfChannels; channel++) {
 
-    sampleNumber = Player.currentPattern.sampleNumber[Player.lastRow][channel];
-    note = Player.currentPattern.note[Player.lastRow][channel];
-    effectNumber = Player.currentPattern.effectNumber[Player.lastRow][channel];
-    effectParameter = Player.currentPattern.effectParameter[Player.lastRow][channel];
+    sampleNumber = currentPattern.sampleNumber[lastRow][channel];
+    note = currentPattern.note[lastRow][channel];
+    effectNumber = currentPattern.effectNumber[lastRow][channel];
+    effectParameter = currentPattern.effectParameter[lastRow][channel];
     effectParameterX = effectParameter >> 4;
     effectParameterY = effectParameter & 0xF;
     sampleOffset = 0;
 
     if(sampleNumber) {
-      Player.lastSampleNumber[channel] = sampleNumber - 1;
+      lastSampleNumber[channel] = sampleNumber - 1;
       if(!(effectParameter == 0xE && effectParameterX == NOTEDELAY))
-        Player.volume[channel] = Mod.samples[Player.lastSampleNumber[channel]].volume;
+        volume[channel] = samples[lastSampleNumber[channel]].volume;
     }
 
     if(note != NONOTE) {
-      Player.lastNote[channel] = note;
-      Player.amigaPeriod[channel] = amigaPeriods[note + Mod.samples[Player.lastSampleNumber[channel]].fineTune];
+      lastNote[channel] = note;
+      amigaPeriod[channel] = amigaPeriods[note + samples[lastSampleNumber[channel]].fineTune];
 
       if(effectNumber != TONEPORTAMENTO && effectNumber != PORTAMENTOVOLUMESLIDE)
-        Player.lastAmigaPeriod[channel] = Player.amigaPeriod[channel];
+        lastAmigaPeriod[channel] = amigaPeriod[channel];
 
-      if(!(Player.waveControl[channel] & 0x80)) Player.vibratoPos[channel] = 0;
-      if(!(Player.waveControl[channel] & 0x08)) Player.tremoloPos[channel] = 0;
+      if(!(waveControl[channel] & 0x80)) vibratoPos[channel] = 0;
+      if(!(waveControl[channel] & 0x08)) tremoloPos[channel] = 0;
     }
 
     switch(effectNumber) {
     case TONEPORTAMENTO:
-      if(effectParameter) Player.portamentoSpeed[channel] = effectParameter;
-      Player.portamentoNote[channel] = Player.amigaPeriod[channel];
+      if(effectParameter) portamentoSpeed[channel] = effectParameter;
+      portamentoNote[channel] = amigaPeriod[channel];
       note = NONOTE;
       break;
 
     case VIBRATO:
-      if(effectParameterX) Player.vibratoSpeed[channel] = effectParameterX;
-      if(effectParameterY) Player.vibratoDepth[channel] = effectParameterY;
+      if(effectParameterX) vibratoSpeed[channel] = effectParameterX;
+      if(effectParameterY) vibratoDepth[channel] = effectParameterY;
       break;
 
     case PORTAMENTOVOLUMESLIDE:
-      Player.portamentoNote[channel] = Player.amigaPeriod[channel];
+      portamentoNote[channel] = amigaPeriod[channel];
       note = NONOTE;
       break;
 
     case TREMOLO:
-      if(effectParameterX) Player.tremoloSpeed[channel] = effectParameterX;
-      if(effectParameterY) Player.tremoloDepth[channel] = effectParameterY;
+      if(effectParameterX) tremoloSpeed[channel] = effectParameterX;
+      if(effectParameterY) tremoloDepth[channel] = effectParameterY;
       break;
 
     case SETCHANNELPANNING:
-      Mixer.channelPanning[channel] = effectParameter >> 1;
+      channelPanning[channel] = effectParameter >> 1;
       break;
 
     case SETSAMPLEOFFSET:
       sampleOffset = effectParameter << 8;
-      if(sampleOffset > Mod.samples[Player.lastSampleNumber[channel]].length)
-        sampleOffset = Mod.samples[Player.lastSampleNumber[channel]].length;
+      if(sampleOffset > samples[lastSampleNumber[channel]].length)
+        sampleOffset = samples[lastSampleNumber[channel]].length;
       break;
 
     case JUMPTOORDER:
-      Player.orderIndex = effectParameter;
-      if(Player.orderIndex >= Mod.songLength)
-        Player.orderIndex = 0;
-      Player.row = 0;
+      orderIndex = effectParameter;
+      if(orderIndex >= songLength)
+        orderIndex = 0;
+      row = 0;
       jumpFlag = true;
       break;
 
     case SETVOLUME:
-      if(effectParameter > 64) Player.volume[channel] = 64;
-      else Player.volume[channel] = effectParameter;
+      if(effectParameter > 64) volume[channel] = 64;
+      else volume[channel] = effectParameter;
       break;
 
     case BREAKPATTERNTOROW:
-      Player.row = effectParameterX * 10 + effectParameterY;
-      if(Player.row >= ROWS)
-        Player.row = 0;
+      row = effectParameterX * 10 + effectParameterY;
+      if(row >= ROWS)
+        row = 0;
       if(!jumpFlag && !breakFlag) {
-        Player.orderIndex++;
-        if(Player.orderIndex >= Mod.songLength)
-          Player.orderIndex = 0;
+        orderIndex++;
+        if(orderIndex >= songLength)
+          orderIndex = 0;
       }
       breakFlag = true;
       break;
@@ -503,50 +500,50 @@ void processRow() {
     case 0xE:
       switch(effectParameterX) {
       case FINEPORTAMENTOUP:
-        Player.lastAmigaPeriod[channel] -= effectParameterY;
+        lastAmigaPeriod[channel] -= effectParameterY;
         break;
 
       case FINEPORTAMENTODOWN:
-        Player.lastAmigaPeriod[channel] += effectParameterY;
+        lastAmigaPeriod[channel] += effectParameterY;
         break;
 
       case SETVIBRATOWAVEFORM:
-        Player.waveControl[channel] &= 0xF0;
-        Player.waveControl[channel] |= effectParameterY;
+        waveControl[channel] &= 0xF0;
+        waveControl[channel] |= effectParameterY;
         break;
 
       case SETFINETUNE:
-        Mod.samples[Player.lastSampleNumber[channel]].fineTune = effectParameterY;
-        if(Mod.samples[Player.lastSampleNumber[channel]].fineTune > 7)
-          Mod.samples[Player.lastSampleNumber[channel]].fineTune -= 16;
+        samples[lastSampleNumber[channel]].fineTune = effectParameterY;
+        if(samples[lastSampleNumber[channel]].fineTune > 7)
+          samples[lastSampleNumber[channel]].fineTune -= 16;
         break;
 
       case PATTERNLOOP:
         if(effectParameterY) {
-          if(Player.patternLoopCount[channel])
-            Player.patternLoopCount[channel]--;
+          if(patternLoopCount[channel])
+            patternLoopCount[channel]--;
           else
-            Player.patternLoopCount[channel] = effectParameterY;
-          if(Player.patternLoopCount[channel])
-            Player.row = Player.patternLoopRow[channel] - 1;
+            patternLoopCount[channel] = effectParameterY;
+          if(patternLoopCount[channel])
+            row = patternLoopRow[channel] - 1;
         } 
         else
-          Player.patternLoopRow[channel] = Player.row;
+          patternLoopRow[channel] = row;
         break;
 
       case SETTREMOLOWAVEFORM:
-        Player.waveControl[channel] &= 0xF;
-        Player.waveControl[channel] |= effectParameterY << 4;
+        waveControl[channel] &= 0xF;
+        waveControl[channel] |= effectParameterY << 4;
         break;
 
       case FINEVOLUMESLIDEUP:
-        Player.volume[channel] += effectParameterY;
-        if(Player.volume[channel] > 64) Player.volume[channel] = 64;
+        volume[channel] += effectParameterY;
+        if(volume[channel] > 64) volume[channel] = 64;
         break;
 
       case FINEVOLUMESLIDEDOWN:
-        Player.volume[channel] -= effectParameterY;
-        if(Player.volume[channel] < 0) Player.volume[channel] = 0;
+        volume[channel] -= effectParameterY;
+        if(volume[channel] < 0) volume[channel] = 0;
         break;
 
       case NOTECUT:
@@ -554,7 +551,7 @@ void processRow() {
         break;
 
       case PATTERNDELAY:
-        Player.patternDelay = effectParameterY;
+        patternDelay = effectParameterY;
         break;
 
       case INVERTLOOP:
@@ -565,25 +562,25 @@ void processRow() {
 
     case SETSPEED:
       if(effectParameter < 0x20)
-        Player.speed = effectParameter;
+        speed = effectParameter;
       else
-        Player.samplesPerTick = SAMPLERATE / (2 * effectParameter / 5);
+        samplesPerTick = SAMPLERATE / (2 * effectParameter / 5);
       break;
     }
 
-    if(note != NONOTE || Player.lastAmigaPeriod[channel] &&
+    if(note != NONOTE || lastAmigaPeriod[channel] &&
       effectNumber != VIBRATO && effectNumber != VIBRATOVOLUMESLIDE &&
       !(effectNumber == 0xE && effectParameterX == NOTEDELAY))
-      Mixer.channelFrequency[channel] = Player.amiga / Player.lastAmigaPeriod[channel];
+      channelFrequency[channel] = amiga / lastAmigaPeriod[channel];
 
     if(note != NONOTE)
-      Mixer.channelSampleOffset[channel] = sampleOffset << DIVIDER;
+      channelSampleOffset[channel] = sampleOffset << DIVIDER;
 
     if(sampleNumber)
-      Mixer.channelSampleNumber[channel] = Player.lastSampleNumber[channel];
+      channelSampleNumber[channel] = lastSampleNumber[channel];
 
     if(effectNumber != TREMOLO)
-      Mixer.channelVolume[channel] = Player.volume[channel];
+      channelVolume[channel] = volume[channel];
 
   }
 }
@@ -598,45 +595,45 @@ void processTick() {
   static uint8_t effectParameterY;
   static uint16_t tempNote;
 
-  for(channel = 0; channel < Mod.numberOfChannels; channel++) {
+  for(channel = 0; channel < numberOfChannels; channel++) {
 
-    if(Player.lastAmigaPeriod[channel]) {
+    if(lastAmigaPeriod[channel]) {
 
-      sampleNumber = Player.currentPattern.sampleNumber[Player.lastRow][channel];
-      note = Player.currentPattern.note[Player.lastRow][channel];
-      effectNumber = Player.currentPattern.effectNumber[Player.lastRow][channel];
-      effectParameter = Player.currentPattern.effectParameter[Player.lastRow][channel];
+      sampleNumber = currentPattern.sampleNumber[lastRow][channel];
+      note = currentPattern.note[lastRow][channel];
+      effectNumber = currentPattern.effectNumber[lastRow][channel];
+      effectParameter = currentPattern.effectParameter[lastRow][channel];
       effectParameterX = effectParameter >> 4;
       effectParameterY = effectParameter & 0xF;
 
       switch(effectNumber) {
       case ARPEGGIO:
         if(effectParameter)
-          switch(Player.tick % 3) {
+          switch(tick % 3) {
           case 0:
-            Mixer.channelFrequency[channel] = Player.amiga / Player.lastAmigaPeriod[channel];
+            channelFrequency[channel] = amiga / lastAmigaPeriod[channel];
             break;
           case 1:
-            tempNote = Player.lastNote[channel] + effectParameterX * 8 + Mod.samples[Player.lastSampleNumber[channel]].fineTune;
-            if(tempNote < 296) Mixer.channelFrequency[channel] = Player.amiga / amigaPeriods[tempNote];
+            tempNote = lastNote[channel] + effectParameterX * 8 + samples[lastSampleNumber[channel]].fineTune;
+            if(tempNote < 296) channelFrequency[channel] = amiga / amigaPeriods[tempNote];
             break;
           case 2:
-            tempNote = Player.lastNote[channel] + effectParameterY * 8 + Mod.samples[Player.lastSampleNumber[channel]].fineTune;
-            if(tempNote < 296) Mixer.channelFrequency[channel] = Player.amiga / amigaPeriods[tempNote];
+            tempNote = lastNote[channel] + effectParameterY * 8 + samples[lastSampleNumber[channel]].fineTune;
+            if(tempNote < 296) channelFrequency[channel] = amiga / amigaPeriods[tempNote];
             break;
           }
         break;
 
       case PORTAMENTOUP:
-        Player.lastAmigaPeriod[channel] -= effectParameter;
-        if(Player.lastAmigaPeriod[channel] < 113) Player.lastAmigaPeriod[channel] = 113;
-        Mixer.channelFrequency[channel] = Player.amiga / Player.lastAmigaPeriod[channel];
+        lastAmigaPeriod[channel] -= effectParameter;
+        if(lastAmigaPeriod[channel] < 113) lastAmigaPeriod[channel] = 113;
+        channelFrequency[channel] = amiga / lastAmigaPeriod[channel];
         break;
 
       case PORTAMENTODOWN:
-        Player.lastAmigaPeriod[channel] += effectParameter;
-        if(Player.lastAmigaPeriod[channel] > 856) Player.lastAmigaPeriod[channel] = 856;
-        Mixer.channelFrequency[channel] = Player.amiga / Player.lastAmigaPeriod[channel];
+        lastAmigaPeriod[channel] += effectParameter;
+        if(lastAmigaPeriod[channel] > 856) lastAmigaPeriod[channel] = 856;
+        channelFrequency[channel] = amiga / lastAmigaPeriod[channel];
         break;
 
       case TONEPORTAMENTO:
@@ -649,18 +646,18 @@ void processTick() {
 
       case PORTAMENTOVOLUMESLIDE:
         portamento(channel);
-        Player.volume[channel] += effectParameterX - effectParameterY;
-        if(Player.volume[channel] < 0) Player.volume[channel] = 0;
-        else if(Player.volume[channel] > 64) Player.volume[channel] = 64;
-        Mixer.channelVolume[channel] = Player.volume[channel];
+        volume[channel] += effectParameterX - effectParameterY;
+        if(volume[channel] < 0) volume[channel] = 0;
+        else if(volume[channel] > 64) volume[channel] = 64;
+        channelVolume[channel] = volume[channel];
         break;
 
       case VIBRATOVOLUMESLIDE:
         vibrato(channel);
-        Player.volume[channel] += effectParameterX - effectParameterY;
-        if(Player.volume[channel] < 0) Player.volume[channel] = 0;
-        else if(Player.volume[channel] > 64) Player.volume[channel] = 64;
-        Mixer.channelVolume[channel] = Player.volume[channel];
+        volume[channel] += effectParameterX - effectParameterY;
+        if(volume[channel] < 0) volume[channel] = 0;
+        else if(volume[channel] > 64) volume[channel] = 64;
+        channelVolume[channel] = volume[channel];
         break;
 
       case TREMOLO:
@@ -668,32 +665,32 @@ void processTick() {
         break;
 
       case VOLUMESLIDE:
-        Player.volume[channel] += effectParameterX - effectParameterY;
-        if(Player.volume[channel] < 0) Player.volume[channel] = 0;
-        else if(Player.volume[channel] > 64) Player.volume[channel] = 64;
-        Mixer.channelVolume[channel] = Player.volume[channel];
+        volume[channel] += effectParameterX - effectParameterY;
+        if(volume[channel] < 0) volume[channel] = 0;
+        else if(volume[channel] > 64) volume[channel] = 64;
+        channelVolume[channel] = volume[channel];
         break;
 
       case 0xE:
         switch(effectParameterX) {
         case RETRIGGERNOTE:
           if(!effectParameterY) break;
-          if(!(Player.tick % effectParameterY)) {
-            Mixer.channelSampleOffset[channel] = 0;
+          if(!(tick % effectParameterY)) {
+            channelSampleOffset[channel] = 0;
           }
           break;
 
         case NOTECUT:
-          if(Player.tick == effectParameterY)
-            Mixer.channelVolume[channel] = Player.volume[channel] = 0;
+          if(tick == effectParameterY)
+            channelVolume[channel] = volume[channel] = 0;
           break;
 
         case NOTEDELAY:
-          if(Player.tick == effectParameterY) {
-            if(sampleNumber) Player.volume[channel] = Mod.samples[Player.lastSampleNumber[channel]].volume;
-            if(note != NONOTE) Mixer.channelSampleOffset[channel] = 0;
-            Mixer.channelFrequency[channel] = Player.amiga / Player.lastAmigaPeriod[channel];
-            Mixer.channelVolume[channel] = Player.volume[channel];
+          if(tick == effectParameterY) {
+            if(sampleNumber) volume[channel] = samples[lastSampleNumber[channel]].volume;
+            if(note != NONOTE) channelSampleOffset[channel] = 0;
+            channelFrequency[channel] = amiga / lastAmigaPeriod[channel];
+            channelVolume[channel] = volume[channel];
           }
           break;
         }
@@ -706,23 +703,23 @@ void processTick() {
 }
 
 void player() {
-  if(Player.tick == Player.speed) {
-    Player.tick = 0;
+  if(tick == speed) {
+    tick = 0;
 
-    if(Player.row == ROWS) {
-      Player.orderIndex++;
-      if(Player.orderIndex == Mod.songLength)
-        Player.orderIndex = 0;
-      Player.row = 0;
+    if(row == ROWS) {
+      orderIndex++;
+      if(orderIndex == songLength)
+        orderIndex = 0;
+      row = 0;
     }
 
-    if(Player.patternDelay) {
-      Player.patternDelay--;
+    if(patternDelay) {
+      patternDelay--;
     } 
     else {
-      if(Player.orderIndex != Player.oldOrderIndex)
-        loadPattern(Mod.order[Player.orderIndex]);
-      Player.oldOrderIndex = Player.orderIndex;
+      if(orderIndex != oldOrderIndex)
+        loadPattern(order[orderIndex]);
+      oldOrderIndex = orderIndex;
       processRow();
     }
 
@@ -730,7 +727,7 @@ void player() {
   else {
     processTick();
   }
-  Player.tick++;
+  tick++;
 }
 
 void mixer() {
@@ -746,40 +743,40 @@ void mixer() {
 
   sumL = 0;
   sumR = 0;
-  for(channel = 0; channel < Mod.numberOfChannels; channel++) {
+  for(channel = 0; channel < numberOfChannels; channel++) {
 
-    if(!Mixer.channelFrequency[channel] ||
-      !Mod.samples[Mixer.channelSampleNumber[channel]].length) continue;
+    if(!channelFrequency[channel] ||
+      !samples[channelSampleNumber[channel]].length) continue;
 
-    Mixer.channelSampleOffset[channel] += Mixer.channelFrequency[channel];
+    channelSampleOffset[channel] += channelFrequency[channel];
 
-    if(!Mixer.channelVolume[channel]) continue;
+    if(!channelVolume[channel]) continue;
 
-    samplePointer = Mixer.sampleBegin[Mixer.channelSampleNumber[channel]] +
-      (Mixer.channelSampleOffset[channel] >> DIVIDER);
+    samplePointer = sampleBegin[channelSampleNumber[channel]] +
+      (channelSampleOffset[channel] >> DIVIDER);
 
-    if(Mixer.sampleLoopLength[Mixer.channelSampleNumber[channel]]) {
+    if(sampleLoopLength[channelSampleNumber[channel]]) {
 
-      if(samplePointer >= Mixer.sampleLoopEnd[Mixer.channelSampleNumber[channel]]) {
-        Mixer.channelSampleOffset[channel] -= Mixer.sampleLoopLength[Mixer.channelSampleNumber[channel]] << DIVIDER;
-        samplePointer -= Mixer.sampleLoopLength[Mixer.channelSampleNumber[channel]];
+      if(samplePointer >= sampleLoopEnd[channelSampleNumber[channel]]) {
+        channelSampleOffset[channel] -= sampleLoopLength[channelSampleNumber[channel]] << DIVIDER;
+        samplePointer -= sampleLoopLength[channelSampleNumber[channel]];
       }
 
     } 
     else {
 
-      if(samplePointer >= Mixer.sampleEnd[Mixer.channelSampleNumber[channel]]) {
-        Mixer.channelFrequency[channel] = 0;
-        samplePointer = Mixer.sampleEnd[Mixer.channelSampleNumber[channel]];
+      if(samplePointer >= sampleEnd[channelSampleNumber[channel]]) {
+        channelFrequency[channel] = 0;
+        samplePointer = sampleEnd[channelSampleNumber[channel]];
       }
 
     }
 
     if(samplePointer < FatBuffer.samplePointer[channel] ||
       samplePointer >= FatBuffer.samplePointer[channel] + FATBUFFERSIZE - 1 ||
-      Mixer.channelSampleNumber[channel] != FatBuffer.channelSampleNumber[channel]) {
+      channelSampleNumber[channel] != FatBuffer.channelSampleNumber[channel]) {
 
-      fatBufferSize = Mixer.sampleEnd[Mixer.channelSampleNumber[channel]] - samplePointer + 1;
+      fatBufferSize = sampleEnd[channelSampleNumber[channel]] - samplePointer + 1;
       if(fatBufferSize > FATBUFFERSIZE) fatBufferSize = FATBUFFERSIZE;
 
       //   LEDLAT = ~(1 << (channel & 0x3));
@@ -788,7 +785,7 @@ void mixer() {
       //   LEDLAT = 0xF;
 
       FatBuffer.samplePointer[channel] = samplePointer;
-      FatBuffer.channelSampleNumber[channel] = Mixer.channelSampleNumber[channel];
+      FatBuffer.channelSampleNumber[channel] = channelSampleNumber[channel];
     }
 
     current = FatBuffer.channels[channel][(samplePointer - FatBuffer.samplePointer[channel]) & FATBUFFERSIZE - 1];
@@ -797,22 +794,22 @@ void mixer() {
     out = current;
 
     // Integer linear interpolation
-    out += (next - current) * (Mixer.channelSampleOffset[channel] & (1 << DIVIDER) - 1) >> DIVIDER;
+    out += (next - current) * (channelSampleOffset[channel] & (1 << DIVIDER) - 1) >> DIVIDER;
 
     // Upscale to BITDEPTH
     out <<= BITDEPTH - 8;
 
     // Channel volume
-    out = out * Mixer.channelVolume[channel] >> 6;
+    out = out * channelVolume[channel] >> 6;
 
     // Channel panning
-    sumL += out * min(128 - Mixer.channelPanning[channel], 64) >> 6;
-    sumR += out * min(Mixer.channelPanning[channel], 64) >> 6;
+    sumL += out * min(128 - channelPanning[channel], 64) >> 6;
+    sumR += out * min(channelPanning[channel], 64) >> 6;
   }
 
   // Downscale to BITDEPTH
-  sumL /= Mod.numberOfChannels;
-  sumR /= Mod.numberOfChannels;
+  sumL /= numberOfChannels;
+  sumR /= numberOfChannels;
 
   // Fill the sound buffer with unsigned values
   SoundBuffer.left[SoundBuffer.writePos] = sumL + (1 << BITDEPTH - 1);
@@ -827,45 +824,45 @@ void loadMod() {
   loadHeader();
   loadSamples();
 
-  Player.amiga = AMIGA;
-  Player.samplesPerTick = SAMPLERATE / (2 * 125 / 5); // Hz = 2 * BPM / 5
-  Player.speed = 6;
-  Player.tick = Player.speed;
-  Player.row = 0;
+  amiga = AMIGA;
+  samplesPerTick = SAMPLERATE / (2 * 125 / 5); // Hz = 2 * BPM / 5
+  speed = 6;
+  tick = speed;
+  row = 0;
 
-  Player.orderIndex = 0;
-  Player.oldOrderIndex = 0xFF;
-  Player.patternDelay = 0;
+  orderIndex = 0;
+  oldOrderIndex = 0xFF;
+  patternDelay = 0;
 
-  for(channel = 0; channel < Mod.numberOfChannels; channel++) {
-    Player.patternLoopCount[channel] = 0;
-    Player.patternLoopRow[channel] = 0;
+  for(channel = 0; channel < numberOfChannels; channel++) {
+    patternLoopCount[channel] = 0;
+    patternLoopRow[channel] = 0;
 
-    Player.lastAmigaPeriod[channel] = 0;
+    lastAmigaPeriod[channel] = 0;
 
-    Player.waveControl[channel] = 0;
+    waveControl[channel] = 0;
 
-    Player.vibratoSpeed[channel] = 0;
-    Player.vibratoDepth[channel] = 0;
-    Player.vibratoPos[channel] = 0;
+    vibratoSpeed[channel] = 0;
+    vibratoDepth[channel] = 0;
+    vibratoPos[channel] = 0;
 
-    Player.tremoloSpeed[channel] = 0;
-    Player.tremoloDepth[channel] = 0;
-    Player.tremoloPos[channel] = 0;
+    tremoloSpeed[channel] = 0;
+    tremoloDepth[channel] = 0;
+    tremoloPos[channel] = 0;
 
     FatBuffer.samplePointer[channel] = 0;
     FatBuffer.channelSampleNumber[channel] = 0xFF;
 
-    Mixer.channelSampleOffset[channel] = 0;
-    Mixer.channelFrequency[channel] = 0;
-    Mixer.channelVolume[channel] = 0;
+    channelSampleOffset[channel] = 0;
+    channelFrequency[channel] = 0;
+    channelVolume[channel] = 0;
     switch(channel % 4) {
     case 0:
     case 3:
-      Mixer.channelPanning[channel] = STEREOSEPARATION;
+      channelPanning[channel] = STEREOSEPARATION;
       break;
     default:
-      Mixer.channelPanning[channel] = 128 - STEREOSEPARATION;
+      channelPanning[channel] = 128 - STEREOSEPARATION;
     }
   }
 
@@ -873,17 +870,20 @@ void loadMod() {
   SoundBuffer.readPos = 0;
 }
 
+};
+
 void appTest2()
 {
   vsWriteReg(SCI_VOL,0x4040);
   VS_DCS_LOW;
   unsigned char temp,aa;
   fileDialog(file,dir);
-  loadMod();
+  MOD_Player *ModPlayer = new MOD_Player();
+  ModPlayer->loadMod();
   consoleReset();
-  consolePuts(Mod.name);
+  consolePuts(ModPlayer->name);
   consolePuts("\n--------\n");
-  for(aa=0;aa<SAMPLES;aa++)consolePuts(Mod.samples[aa].name),consolePutc('\n');
+  for(aa=0;aa<SAMPLES;aa++)consolePuts(ModPlayer->samples[aa].name),consolePutc('\n');
   for(aa=0;aa<44;aa++)
   {
     while(!vsDreq);
@@ -892,36 +892,37 @@ void appTest2()
   for(;;)
   {
     if(!returnButtonState) break;
-    while((SoundBuffer.writePos + 1 & SOUNDBUFFERSIZE - 1) != SoundBuffer.readPos)
+    while((ModPlayer->SoundBuffer.writePos + 1 & SOUNDBUFFERSIZE - 1) != ModPlayer->SoundBuffer.readPos)
     {
       if(!i)
       {
-        player();
-        i = Player.samplesPerTick;
+        ModPlayer->player();
+        i = ModPlayer->samplesPerTick;
       }
-      mixer();
+      ModPlayer->mixer();
       i--;
-      if(vsDreq&&SoundBuffer.writePos!=SoundBuffer.readPos)
+      if(vsDreq&&ModPlayer->SoundBuffer.writePos!=ModPlayer->SoundBuffer.readPos)
       {
-        vsWrite(SoundBuffer.left[SoundBuffer.readPos]&0xFF,temp);
-        vsWrite((SoundBuffer.left[SoundBuffer.readPos]>>8)^0x80,temp);
-        vsWrite(SoundBuffer.right[SoundBuffer.readPos]&0xFF,temp);
-        vsWrite((SoundBuffer.right[SoundBuffer.readPos]>>8)^0x80,temp);
-        SoundBuffer.readPos++;
-        SoundBuffer.readPos &= SOUNDBUFFERSIZE-1;
+        vsWrite(ModPlayer->SoundBuffer.left[ModPlayer->SoundBuffer.readPos]&0xFF,temp);
+        vsWrite((ModPlayer->SoundBuffer.left[ModPlayer->SoundBuffer.readPos]>>8)^0x80,temp);
+        vsWrite(ModPlayer->SoundBuffer.right[ModPlayer->SoundBuffer.readPos]&0xFF,temp);
+        vsWrite((ModPlayer->SoundBuffer.right[ModPlayer->SoundBuffer.readPos]>>8)^0x80,temp);
+        ModPlayer->SoundBuffer.readPos++;
+        ModPlayer->SoundBuffer.readPos &= SOUNDBUFFERSIZE-1;
       }
     }
-    if(vsDreq&&SoundBuffer.writePos!=SoundBuffer.readPos)
-    {
-      vsWrite(SoundBuffer.left[SoundBuffer.readPos]&0xFF,temp);
-      vsWrite((SoundBuffer.left[SoundBuffer.readPos]>>8)^0x80,temp);
-      vsWrite(SoundBuffer.right[SoundBuffer.readPos]&0xFF,temp);
-      vsWrite((SoundBuffer.right[SoundBuffer.readPos]>>8)^0x80,temp);
-      SoundBuffer.readPos++;
-      SoundBuffer.readPos &= SOUNDBUFFERSIZE-1;
-    }
+      if(vsDreq&&ModPlayer->SoundBuffer.writePos!=ModPlayer->SoundBuffer.readPos)
+      {
+        vsWrite(ModPlayer->SoundBuffer.left[ModPlayer->SoundBuffer.readPos]&0xFF,temp);
+        vsWrite((ModPlayer->SoundBuffer.left[ModPlayer->SoundBuffer.readPos]>>8)^0x80,temp);
+        vsWrite(ModPlayer->SoundBuffer.right[ModPlayer->SoundBuffer.readPos]&0xFF,temp);
+        vsWrite((ModPlayer->SoundBuffer.right[ModPlayer->SoundBuffer.readPos]>>8)^0x80,temp);
+        ModPlayer->SoundBuffer.readPos++;
+        ModPlayer->SoundBuffer.readPos &= SOUNDBUFFERSIZE-1;
+      }
   }
   VS_DCS_HIGH;
   vsEndPlaying();
   LCD_ResetWindow();
+  delete ModPlayer;
 }
