@@ -43,6 +43,20 @@ void inline LCD_WriteIndex(byte index)
   LCD_RS_HI;
 }
 
+inline void LCD_WriteData(unsigned short int data)
+{
+  
+  LCD_LOFF;
+  LCD_BUS = data&0xFF;
+  LCD_LON;
+  LCD_BUS = data>>8;
+
+  LCD_WR_LO;
+  asm("nop");
+  LCD_WR_HI;
+
+}
+
 inline void LCD_WriteData(unsigned int data)
 {
   
@@ -55,9 +69,9 @@ inline void LCD_WriteData(unsigned int data)
   asm("nop");
   LCD_WR_HI;
 
-}  
+}
 
-void LCD_WriteReg(byte index, unsigned int data)
+void LCD_WriteReg(byte index, unsigned short int data)
 {
   // Write Index
   LCD_WriteIndex(index);
@@ -158,7 +172,7 @@ void LCD_ModeDR()
   LCD_WriteReg(0x0011,0b110000000111000);
 }
 
-void LCD_SetCursor(unsigned char x, unsigned int y)
+void LCD_SetCursor(unsigned char x, unsigned short int y)
 {
 if (x < 240 && y < 320) {
     LCD_WriteReg(0x4E, x);
@@ -166,7 +180,7 @@ if (x < 240 && y < 320) {
 }  
 }
 
-void LCD_SetWindow(byte x1, unsigned int y1, byte x2, unsigned int y2)
+void LCD_SetWindow(byte x1, unsigned short int y1, byte x2, unsigned short int y2)
 {
   LCD_WriteReg(0x44,(x2 << 8) | x1);    // Source RAM address window 
   LCD_WriteReg(0x45,y1);    // Gate RAM address window 
@@ -177,7 +191,7 @@ void LCD_SetWindow(byte x1, unsigned int y1, byte x2, unsigned int y2)
 
 
 
-void LCD_SolidFill(unsigned long count, unsigned int color)
+void LCD_SolidFill(unsigned int count, unsigned short int color)
 {
   // Write Index
   LCD_WriteIndex(0x22);
@@ -195,7 +209,7 @@ void LCD_SolidFill(unsigned long count, unsigned int color)
   }
 }
 
-void LCD_Clear(unsigned int color)
+void LCD_Clear(unsigned short int color)
 {
   LCD_SetCursor(0,0);
   /*LCD_WriteIndex(0x22);
@@ -206,14 +220,14 @@ void LCD_Clear(unsigned int color)
   LCD_SolidFill(76800, color);  // This is a faster method
 }
 
-void LCD_PutPixel(byte x, unsigned int y, unsigned int color)
+void LCD_PutPixel(byte x, unsigned short int y, unsigned short int color)
 {
   LCD_SetCursor(x,y);
   LCD_WriteIndex(0x22);
   LCD_WriteData(color);
 }  
 
-void LCD_HorLine(byte x1, byte x2, unsigned int y, unsigned int color)
+void LCD_HorLine(byte x1, byte x2, unsigned short int y, unsigned short int color)
 {
 if (x1 < 240 && x2 < 240 && y < 320) {
   LCD_SetCursor(x1,y);
@@ -226,7 +240,7 @@ if (x1 < 240 && x2 < 240 && y < 320) {
 }  
 }  
 
-void LCD_VerLine(unsigned short int y1, unsigned short int y2, byte x, unsigned int color)
+void LCD_VerLine(unsigned short int y1, unsigned short int y2, byte x, unsigned short int color)
 {
   LCD_SetWindow(x,y1,x,y2);
   LCD_WriteIndex(0x22);
@@ -238,7 +252,7 @@ void LCD_VerLine(unsigned short int y1, unsigned short int y2, byte x, unsigned 
   LCD_ResetWindow();
 }  
 
-void LCD_HardwareScroll(int y)
+void LCD_HardwareScroll(short int y)
 {
     while (y < 0)
         y += 320;
@@ -247,7 +261,7 @@ void LCD_HardwareScroll(int y)
     LCD_WriteReg(0x41,y);
 }    
 
-void LCD_Clear_ScrollUp(byte delay_between, unsigned int color)
+void LCD_Clear_ScrollUp(byte delay_between, unsigned short int color)
 {
   for (int i=1; i <= 320; i++) {    
     LCD_HardwareScroll(i);
@@ -257,7 +271,7 @@ void LCD_Clear_ScrollUp(byte delay_between, unsigned int color)
   LCD_HardwareScroll(0);
 }  
 
-void LCD_Clear_ScrollDown(byte delay_between, unsigned int color)
+void LCD_Clear_ScrollDown(byte delay_between, unsigned short int color)
 {
   for (int i=-1; i >= -320; i--) {    
     LCD_HorLine(0,239,320+i,color);  
@@ -267,7 +281,7 @@ void LCD_Clear_ScrollDown(byte delay_between, unsigned int color)
   LCD_HardwareScroll(0);  
 } 
 
-int LCD_DrawChar(byte xx, unsigned int yy, int c, unsigned int color)
+int LCD_DrawChar(byte xx, unsigned short int yy, int c, unsigned short int color)
 {
     //byte* f = Verdana_font_11;
     if (c == 32)
@@ -314,18 +328,18 @@ int LCD_DrawChar(byte xx, unsigned int yy, int c, unsigned int color)
     return width;
 }
 
-void LCD_DrawString2(const char* s, int len, byte x, unsigned int y, unsigned int color)
+void LCD_DrawString2(const char* s, int len, byte x, unsigned short int y, unsigned short int color)
 {
     for (int i = 0; i < len; i++)
         x += LCD_DrawChar(x,y,s[i], color) + 1;
 }
 
-void LCD_DrawString(const char* s, byte x, unsigned int y, unsigned int color)
+void LCD_DrawString(const char* s, byte x, unsigned short int y, unsigned short int color)
 {
     LCD_DrawString2(s,strlen(s),x,y, color);
 }
 
-void LCD_Rectangle(byte x1, unsigned int y1, byte x2, unsigned int y2, int color)
+void LCD_Rectangle(byte x1, unsigned short int y1, byte x2, unsigned short int y2, unsigned short int color)
 {      
     LCD_SetWindow(x1,y1,x2,y2);
 //    LCD_SetCursor(x1,y1);
