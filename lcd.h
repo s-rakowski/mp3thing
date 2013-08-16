@@ -31,5 +31,6 @@
 
 #define FNT(_x) Verdana_font_11[_x]
 
-inline void LCD_WriteData(unsigned int data) __attribute__((always_inline));
+inline void LCD_WriteData(unsigned short int data) __attribute__((always_inline));
+inline void LCD_WriteData(byte higher, byte lower) __attribute__((always_inline));
 inline void LCD_WriteIndex(unsigned char index) __attribute__((always_inline));
