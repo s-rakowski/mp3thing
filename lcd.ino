@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <driverlib/sysctl.h>
 #include <inc/hw_gpio.h>
-//SSD1298,1289 lib
+//SSD1289 lib
 #define RGB(red, green, blue)	((unsigned int)( (( red >> 3 ) << 11 ) | \
 								(( green >> 2 ) << 5  ) | \
 								( blue  >> 3 )))
@@ -57,13 +57,13 @@ inline void LCD_WriteData(unsigned short int data)
 
 }
 
-inline void LCD_WriteData(unsigned int data)
+inline void LCD_WriteData(byte higher, byte lower)
 {
   
   LCD_LOFF;
-  LCD_BUS = data&0xFF;
+  LCD_BUS = lower;
   LCD_LON;
-  LCD_BUS = data>>8;
+  LCD_BUS = higher;
 
   LCD_WR_LO;
   asm("nop");
@@ -263,7 +263,7 @@ void LCD_HardwareScroll(short int y)
 
 void LCD_Clear_ScrollUp(byte delay_between, unsigned short int color)
 {
-  for (int i=1; i <= 320; i++) {    
+  for (unsigned short int i=1; i <= 320; i++) {    
     LCD_HardwareScroll(i);
     LCD_HorLine(0,239,i-1,color);    
     delay(delay_between);
@@ -273,7 +273,7 @@ void LCD_Clear_ScrollUp(byte delay_between, unsigned short int color)
 
 void LCD_Clear_ScrollDown(byte delay_between, unsigned short int color)
 {
-  for (int i=-1; i >= -320; i--) {    
+  for (short int i=-1; i >= -320; i--) {    
     LCD_HorLine(0,239,320+i,color);  
     LCD_HardwareScroll(i);  
     delay(delay_between);    
@@ -330,7 +330,7 @@ int LCD_DrawChar(byte xx, unsigned short int yy, int c, unsigned short int color
 
 void LCD_DrawString2(const char* s, int len, byte x, unsigned short int y, unsigned short int color)
 {
-    for (int i = 0; i < len; i++)
+    for (unsigned short i = 0; i < len; i++)
         x += LCD_DrawChar(x,y,s[i], color) + 1;
 }
 

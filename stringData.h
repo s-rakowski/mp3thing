@@ -1,3 +1,11 @@
+//Startup
+static const char initvs_str[] = "Init VS1003\n";
+static const char initsd_str[] = "Init SD Card\n";
+static const char inittouch_str[] = "Init touchscreen\n";
+static const char initcal_str[] = "Reading settings\n";
+static const char sdfail_str[] = "SD init failed\n";
+static const char mountfail_str[] = "Mount failed\n";
+//----------------------
 //Screen calibration app
 static const char appCalibrateName[] = "Calibrate Screen";
 static const char appCalibrateDone[] = "Done!";

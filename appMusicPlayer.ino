@@ -48,14 +48,15 @@ void appMusicPlayer()
 
 unsigned char playAudioFile(FIL& file)
 {
-  BYTE *buf = new BYTE[32];
-  unsigned int n=1,fileSize=f_size(&file),playTime,artistPos,titlePos,tempSize;
+  BYTE buf[32];
+  unsigned int n=1,fileSize,playTime,artistPos,titlePos,tempSize;
   unsigned short int s,jj,curPos,lastPos;
   char nameString[256],tempbuf[10]; 
   unsigned short int nameStart=0,nameEnd; 
   byte hasInfo=0,notfound,temp,ii,isPlaying=1,lastVol=map(systemVol,254,0,30,231);
   unsigned char spc[14];//spectrum data
   for(ii=0;ii<14;ii++)spc[ii]=0;
+  fileSize=f_size(&file);
   nameString[0]=0;
   //look for ID3
   f_read(&file,tempbuf,3,&n);
@@ -165,7 +166,6 @@ unsigned char playAudioFile(FIL& file)
       { 
         VS_DCS_HIGH;
         vsEndPlaying();
-        delete [] buf;
         return FILE_END;
       }
       for(ii=0;ii<n;ii++)
@@ -237,6 +237,7 @@ unsigned char playAudioFile(FIL& file)
           }
         } 
       }
+      //draw spectrum bars
       vsWriteReg(SCI_WRAMADDR,0x1384);
       for(ii=0;ii<14;ii++)
       {
@@ -250,7 +251,7 @@ unsigned char playAudioFile(FIL& file)
       VS_DCS_LOW;
     }
     //draw position bar
-    curPos=map(f_tell(&file),0,fileSize,0,223);
+    curPos=map(f_tell(&file)>>3,0,fileSize>>3,0,232); //Max file size is still ~70MB. At least I don't have that large audio files.
     if(curPos!=lastPos)
     {
       LCD_VerLine(264,279,8+lastPos,BLACK);
@@ -278,19 +279,16 @@ unsigned char playAudioFile(FIL& file)
         case 0: //prev
           VS_DCS_HIGH;
           vsEndPlaying();
-          delete [] buf;
           return FILE_PREV;
           break;
         case 3: //next
           VS_DCS_HIGH;
           vsEndPlaying();
-          delete [] buf;
           return FILE_NEXT;
           break;
         case 1:
           VS_DCS_HIGH;
           vsEndPlaying();
-          delete [] buf;
           return STOP_PRESSED;
           break;
         }
@@ -298,7 +296,7 @@ unsigned char playAudioFile(FIL& file)
       }
       else if(touchGetY()>251&&touchGetY()<281&&touchGetX()>7&&touchGetX()<232) //position bar
       {
-        f_lseek(&file,map(touchGetX()-8,0,223,0,fileSize));
+        f_lseek(&file,map(touchGetX()-8,0,223,0,fileSize>>3)<<3);
         delay(1);
       }
       else if(touchGetY()>236&&touchGetY()<255&&touchGetX()>29&&touchGetX()<232) //volume bar

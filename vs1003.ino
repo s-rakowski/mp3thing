@@ -1,32 +1,32 @@
 void vsInit()
 {
-  GPIOPinTypeGPIOOutput(VS_RESET_PORT,VS_RESET_PIN);
-  GPIOPinWrite(VS_RESET_PORT,VS_RESET_PIN,0);//hw reset
+  ROM_GPIOPinTypeGPIOOutput(VS_RESET_PORT,VS_RESET_PIN);
+  ROM_GPIOPinWrite(VS_RESET_PORT,VS_RESET_PIN,0);//hw reset
 
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI0);
-  SSIDisable(SSI0_BASE);
-  GPIOPinConfigure(GPIO_PA2_SSI0CLK);
-  GPIOPinConfigure(GPIO_PA4_SSI0RX);
-  GPIOPinConfigure(GPIO_PA5_SSI0TX);
-  GPIOPinConfigure(GPIO_PA3_SSI0FSS);
-  GPIOPinTypeSSI(GPIO_PORTA_BASE, GPIO_PIN_3 | GPIO_PIN_2 | GPIO_PIN_5 | GPIO_PIN_4);
-  GPIOPinTypeGPIOOutput(VS_CS_PORT, VS_CS_PIN);
-  GPIOPinTypeGPIOOutput(VS_DCS_PORT, VS_DCS_PIN);
-  GPIOPinWrite(VS_DCS_PORT,VS_DCS_PIN,VS_DCS_PIN);
-  GPIOPinTypeGPIOInput(VS_DREQ_PORT, VS_DREQ_PIN);
+  ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI0);
+  ROM_SSIDisable(SSI0_BASE);
+  ROM_GPIOPinConfigure(GPIO_PA2_SSI0CLK);
+  ROM_GPIOPinConfigure(GPIO_PA4_SSI0RX);
+  ROM_GPIOPinConfigure(GPIO_PA5_SSI0TX);
+  ROM_GPIOPinConfigure(GPIO_PA3_SSI0FSS);
+  ROM_GPIOPinTypeSSI(GPIO_PORTA_BASE, GPIO_PIN_3 | GPIO_PIN_2 | GPIO_PIN_5 | GPIO_PIN_4);
+  ROM_GPIOPinTypeGPIOOutput(VS_CS_PORT, VS_CS_PIN);
+  ROM_GPIOPinTypeGPIOOutput(VS_DCS_PORT, VS_DCS_PIN);
+  ROM_GPIOPinWrite(VS_DCS_PORT,VS_DCS_PIN,VS_DCS_PIN);
+  ROM_GPIOPinTypeGPIOInput(VS_DREQ_PORT, VS_DREQ_PIN);
 
-  SSIClockSourceSet(SSI0_BASE, SSI_CLOCK_SYSTEM);
-  SSIConfigSetExpClk(SSI0_BASE, SysCtlClockGet(), SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 400000, 8);
-  SSIEnable(SSI0_BASE);
+  ROM_SSIClockSourceSet(SSI0_BASE, SSI_CLOCK_SYSTEM);
+  ROM_SSIConfigSetExpClk(SSI0_BASE, SysCtlClockGet(), SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 400000, 8);
+  ROM_SSIEnable(SSI0_BASE);
   unsigned long ttt;
   while(ROM_SSIDataGetNonBlocking(SSI0_BASE, &ttt));
-  GPIOPinWrite(VS_RESET_PORT,VS_RESET_PIN,VS_RESET_PIN);//disable hw reset
+  ROM_GPIOPinWrite(VS_RESET_PORT,VS_RESET_PIN,VS_RESET_PIN);//disable hw reset
   delay(40);
   vsWriteReg(SCI_CLOCKF,0xe000);
   delay(10);
-  SSIDisable(SSI0_BASE);
-  SSIConfigSetExpClk(SSI0_BASE, SysCtlClockGet(), SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 4000000, 8);
-  SSIEnable(SSI0_BASE);
+  ROM_SSIDisable(SSI0_BASE);
+  ROM_SSIConfigSetExpClk(SSI0_BASE, SysCtlClockGet(), SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 4000000, 8);
+  ROM_SSIEnable(SSI0_BASE);
   delay(1);
   for(unsigned short int ii=0;ii<944;ii++)vsWriteReg(spectrum_atab[ii],spectrum_dtab[ii]);
 }

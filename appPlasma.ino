@@ -27,42 +27,112 @@ static const unsigned char pal[]=
 };
 static const unsigned char sinetable[256]=
 {
-127,130,133,136,139,142,145,148,151,154,157,160,163,166,169,172,175,178,181,184,186,
-189,192,194,197,200,202,205,207,209,212,214,216,218,221,223,225,227,229,230,232,
-234,235,237,239,240,241,243,244,245,246,247,248,249,250,250,251,252,252,253,253,
-253,253,253,254,253,253,253,253,253,252,252,251,250,250,249,248,247,246,245,244,
-243,241,240,239,237,235,234,232,230,229,227,225,223,221,218,216,214,212,209,207,
-205,202,200,197,194,192,189,186,184,181,178,175,172,169,166,163,160,157,154,151,
-148,145,142,139,136,133,130,127,123,120,117,114,111,108,105,102,99,96,93,90,87,
-84,81,78,75,72,69,67,64,61,59,56,53,51,48,46,44,41,39,37,
-35,32,30,28,26,24,23,21,19,18,16,14,13,12,10,9,8,7,6,5,
-4,3,3,2,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,2,
-3,3,4,5,6,7,8,9,10,12,13,14,16,18,19,21,23,24,26,28,
-30,32,35,37,39,41,44,46,48,51,53,56,59,61,64,67,69,72,75,78,
-81,84,87,90,93,96,99,102,105,108,111,114,117,120,123
+  127,130,133,136,139,142,145,148,151,154,157,160,163,166,169,172,175,178,181,184,186,
+  189,192,194,197,200,202,205,207,209,212,214,216,218,221,223,225,227,229,230,232,
+  234,235,237,239,240,241,243,244,245,246,247,248,249,250,250,251,252,252,253,253,
+  253,253,253,254,253,253,253,253,253,252,252,251,250,250,249,248,247,246,245,244,
+  243,241,240,239,237,235,234,232,230,229,227,225,223,221,218,216,214,212,209,207,
+  205,202,200,197,194,192,189,186,184,181,178,175,172,169,166,163,160,157,154,151,
+  148,145,142,139,136,133,130,127,123,120,117,114,111,108,105,102,99,96,93,90,87,
+  84,81,78,75,72,69,67,64,61,59,56,53,51,48,46,44,41,39,37,
+  35,32,30,28,26,24,23,21,19,18,16,14,13,12,10,9,8,7,6,5,
+  4,3,3,2,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,2,
+  3,3,4,5,6,7,8,9,10,12,13,14,16,18,19,21,23,24,26,28,
+  30,32,35,37,39,41,44,46,48,51,53,56,59,61,64,67,69,72,75,78,
+  81,84,87,90,93,96,99,102,105,108,111,114,117,120,123
 };
 void appPlasma()
 {
-//  unsigned char sinetable[256];
-  unsigned char t;
-  unsigned short int ii;
-  unsigned short int jj;
-//  for(ii=0;ii<256;ii++)
-//    sinetable[ii]=(1+sin( (float)ii/128 * PI) )*127;
+   unsigned char t;
+   unsigned short int ii;
+   unsigned short int jj;
+   LCD_SetCursor(0,0);
+   LCD_WriteIndex(0x22);
+   for(;;)
+   {
+   if(!returnButtonState)break;
+   for(jj=0;jj<320;jj++)
+   {
+   for(ii=0;ii<240;ii++)
+   {
+   LCD_WriteData(pal[ ((sinetable[(t+jj)&255]+sinetable[(t+ii)&255]+t)&0xff)|1 ] , pal[ (sinetable[(t+jj)&255]+sinetable[(t+ii)&255]+t)&0xfe ]);
+   }
+   }
+   t++;
+   } 
+
+  /* Derived from the 2011 IOCCC submission by peter.eastman@gmail.com
+   * http://www.ioccc.org/2011/eastman/eastman.c
+   * --
+   * Public Domain -- but you're looking at this for ideas of techniques
+   * and methods, not trying to cut&paste an entire application, anyway.
+   * --
+   * When you need to blit an entire screenfull of data to an LCD
+   * display, the basic idea is to exploit the auto-increment feature of
+   * the display controller when it writes to screen memory. You start
+   * by resetting the 'cursor' to the 0,0 position, and then stream
+   * width*height pixels out.
+   * --
+   * Chris Baird,, <cjb@brushtail.apana.org.au> April 2013
+   */
+/*#define HTML2COLOR(__x) (RGB((__x>>16),((__x>>8)&0xFF),(__x&0xFF)))
+#define Lightgrey (HTML2COLOR(0xC0C0C0))
+#define Midgrey (HTML2COLOR(0x606060))
+#define Darkgrey (HTML2COLOR(0x303030))
+
+  uint16_t xx, yy, colour;
+
+  uint16_t width = 240;
+  uint16_t height = 320;
+FPUEnable();
+  float i=height/5+height%2+1, floorstart=height/5-1, spherespin=0.0,
+  l=width/2, m=height/4, n=.01*width, o=0.0, rotspeed=0.1, h, f, g;
   LCD_SetCursor(0,0);
   LCD_WriteIndex(0x22);
-  for(;;)
+  while (TRUE)
   {
-    if(!returnButtonState)break;
-    for(jj=0;jj<320;jj++)
+    //      reset_cursor ();
+    //      StartStream ();
+
+    for (xx=yy=0;
+	   h = (m-yy)/i, f=-.3*(g=(l-xx)/i)+.954*h, yy<height;
+	   yy += (xx = ++xx%width)==0 )
     {
-      for(ii=0;ii<240;ii++)
+      if (g*g < 1-h*h) 
+        if (((int)(9-spherespin+(.954*g+.3*h)/sqrtf(1-f*f))+(int)(2+f*2))%2==0)
+          colour = RED;
+        else
+          colour = WHITE;
+      else
       {
-        LCD_WriteData(pal[ (sinetable[(t+jj)&255]+sinetable[(t+ii)&255]+t)&0xfe ] | pal[ ((sinetable[(t+jj)&255]+sinetable[(t+ii)&255]+t)&0xff)|1 ]<<8);
+        if (xx<floorstart || xx>width-floorstart)
+          colour = Darkgrey; 
+        else
+          colour = Lightgrey; 
+
+        if (yy > height-floorstart)
+          if (xx < height-yy || height-yy > width-xx) 
+            colour = Darkgrey;
+          else
+            colour = Midgrey;
+
+        if (g*(g+.6)+.09+h*h < 1)
+          colour >>= 1; 	
       }
+
+      LCD_WriteData (colour); 	
     }
-    t++;
+
+    //    StopStream();
+    spherespin += rotspeed;
+    m += o;
+    o = m > height-1.75*floorstart ? -.04*height : o+.002*height;
+    n = (l+=n)<i || l>width-i ? rotspeed=-rotspeed,-n : n;
   }
+
+*/
 }
+
+
 
 

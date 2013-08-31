@@ -3,7 +3,7 @@ void appSlide()
 {
 //  FIL file; DIR dir;
   if(!fileDialog(file,dir)) return;
-  unsigned char pixbuf[480];//one line
+  unsigned char *pixbuf = new unsigned char[480];//one line
   unsigned short int ii,jj,y1,y2;
   unsigned short int scrollData=320;
   unsigned int n,upPos=0,maxPos=f_size(&file)-153600; //needed to figure out when to not scroll down
@@ -90,6 +90,7 @@ void appSlide()
   }  
   f_close(&file);
   LCD_HardwareScroll(0);
+  delete [] pixbuf;
 }
 
 

@@ -1,4 +1,4 @@
-void drawMenuPos(unsigned short int y)
+void drawMenuPos(unsigned char y)
 {
   LCD_ModeDR();
   unsigned char jj,kk;
@@ -14,7 +14,7 @@ void drawMenuPos(unsigned short int y)
   LCD_ModeRD();
 }
 
-void drawIcon(byte x, unsigned int y, const unsigned char *icondata)//draws 16x16 icon
+void drawIcon(byte x, unsigned short int y, const unsigned char *icondata)//draws 16x16 icon
 {
   LCD_SetWindow(x,y,x+15,y+15);
   LCD_WriteIndex(0x22);

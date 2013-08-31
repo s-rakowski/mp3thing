@@ -14,6 +14,7 @@
 #include <inc/lm4f120h5qr.h>
 #include <inc/hw_ssi.h>
 #include "driverlib/gpio.h"
+#include "driverlib/fpu.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/timer.h"
 #include "driverlib/interrupt.h"
@@ -38,13 +39,21 @@ void FatInt()
 }
 void setup()
 {
+  //Set up LCD and touch
+  LCD_Init();
+  consoleReset();
+  Serial.begin(115200);
+  Serial.println(sizeof(bool));
+  consolePuts(initvs_str);
   vsInit();
+  consolePuts(inittouch_str);
   touchInit();
+
   //Set up return button(SW2)
   ROM_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE,GPIO_PIN_0);
   ROM_GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_0, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-  //Set up LCD and touch
-  LCD_Init();
+
+  consolePuts(initsd_str);
 
   //Set up the timer for FatFs
   ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
@@ -57,24 +66,20 @@ void setup()
 
   //Initialize SD card
   BYTE d; 
-  FRESULT fresult;
   d=disk_initialize(0);
   if(d!=FR_OK)
   {
-    consoleReset();
-//    consoleSetFg(RED);
-    consolePuts("sd init failed");
+    consolePuts(sdfail_str);
     while(1);
   }
-  fresult = f_mount( 0, &fatfs );
-  if(fresult!=FR_OK)
+  d = f_mount( 0, &fatfs );
+  if(d!=FR_OK)
   {
-    consoleReset();
-//    consoleSetFg(RED);
-    consolePuts("mount failed");
+    consolePuts(mountfail_str);
     while(1);
   }
   //Check for touch calibration data in internal EEPROM
+  consolePuts(initcal_str);
   long unsigned int calD[5];
   ROM_EEPROMRead(calD,0,20);
   if(calD[0]==0xC0FFEE)//:D
@@ -84,6 +89,7 @@ void setup()
 
 void loop()
 {
+  LCD_ResetWindow();
   LCD_Clear(WHITE);
   for(i=0;i<numApps;i++)
   {
@@ -94,7 +100,7 @@ void loop()
     {
       for(k=0;k<40;k+=2)
       {
-        LCD_WriteData((Gradient20[k|1]<<8)|Gradient20[k]);
+        LCD_WriteData(Gradient20[k|1],Gradient20[k]);
       }
     }
     LCD_ModeRD();
