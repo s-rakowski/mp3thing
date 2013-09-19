@@ -130,7 +130,7 @@ unsigned char playAudioFile(FIL& file)
   else for(ii=0;ii<31;ii++)nameString[ii]=0;
   if(strlen(nameString)>30)nameEnd=strlen(nameString)-29; 
   else nameEnd=1;
-  vsWriteReg(SCI_VOL,systemVol|(systemVol<<8));
+  //vsWriteReg(SCI_VOL,systemVol|(systemVol<<8));
   LCD_ResetWindow(); 
   LCD_Clear(BLACK); //space for ui
   LCD_HorLine(0,239,288,GREEN);
@@ -157,14 +157,15 @@ unsigned char playAudioFile(FIL& file)
   f_lseek(&file,0);
   VS_CS_HIGH;
   VS_DCS_LOW;
+  for(ii=0;ii<10;ii++)vsWrite(0x00,temp);
   while(1)
   {
     if(isPlaying&&vsDreq)
     {
+      VS_DCS_LOW;
       f_read(&file,buf,32,&n);
       if(!n)
       { 
-        VS_DCS_HIGH;
         vsEndPlaying();
         return FILE_END;
       }
@@ -172,6 +173,7 @@ unsigned char playAudioFile(FIL& file)
       {
         vsWrite(buf[ii],temp);
       }
+      VS_DCS_HIGH;
       continue;
     }
     //redraw UI
@@ -198,8 +200,8 @@ unsigned char playAudioFile(FIL& file)
       nameStart=(nameEnd==1) ? 0 : (nameStart+1)%nameEnd;
     }
     if(millis()%40==0){
-      VS_DCS_HIGH;
-      if(!hasInfo)
+//      VS_DCS_HIGH;
+/*      if(!hasInfo)
       {
         s=vsReadReg(SCI_HDAT1);
         if(s)
@@ -236,8 +238,9 @@ unsigned char playAudioFile(FIL& file)
             LCD_DrawString((ii==3) ? bitrates1[s] : bitrates2[s],45,200,GREEN);
           }
         } 
-      }
+      }*/
       //draw spectrum bars
+#ifndef VS1053
       vsWriteReg(SCI_WRAMADDR,0x1384);
       for(ii=0;ii<14;ii++)
       {
@@ -248,7 +251,8 @@ unsigned char playAudioFile(FIL& file)
           LCD_Rectangle(1+(ii*17),179-temp,17+(ii*17),179-spc[ii],GREEN);
         spc[ii]=temp;
       }    
-      VS_DCS_LOW;
+#endif
+//      VS_DCS_LOW;
     }
     //draw position bar
     curPos=map(f_tell(&file)>>3,0,fileSize>>3,0,232); //Max file size is still ~70MB. At least I don't have that large audio files.

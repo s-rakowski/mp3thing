@@ -39,13 +39,10 @@ void FatInt()
 }
 void setup()
 {
+  Serial.begin(115200);
   //Set up LCD and touch
   LCD_Init();
   consoleReset();
-  Serial.begin(115200);
-  Serial.println(sizeof(bool));
-  consolePuts(initvs_str);
-  vsInit();
   consolePuts(inittouch_str);
   touchInit();
 
@@ -78,6 +75,17 @@ void setup()
     consolePuts(mountfail_str);
     while(1);
   }
+  consolePuts(initvs_str);
+  vsInit();
+/*  f_open(&file,"TB_DES~1.OGG",FA_READ);
+  UINT n=3; BYTE xx[32];unsigned short temp;
+  VS_CS_HIGH;VS_DCS_LOW;
+  while(n)
+  {
+    if(vsDreq){
+    f_read(&file,xx,32,&n);
+    for(i=0;i<n;i++) vsWrite(xx[i],temp);}
+  }*/
   //Check for touch calibration data in internal EEPROM
   consolePuts(initcal_str);
   long unsigned int calD[5];

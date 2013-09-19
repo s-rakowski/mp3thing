@@ -1,5 +1,6 @@
 void vsInit()
 {
+  delay(1);
   ROM_GPIOPinTypeGPIOOutput(VS_RESET_PORT,VS_RESET_PIN);
   ROM_GPIOPinWrite(VS_RESET_PORT,VS_RESET_PIN,0);//hw reset
 
@@ -16,19 +17,51 @@ void vsInit()
   ROM_GPIOPinTypeGPIOInput(VS_DREQ_PORT, VS_DREQ_PIN);
 
   ROM_SSIClockSourceSet(SSI0_BASE, SSI_CLOCK_SYSTEM);
-  ROM_SSIConfigSetExpClk(SSI0_BASE, SysCtlClockGet(), SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 400000, 8);
+  ROM_SSIConfigSetExpClk(SSI0_BASE, SysCtlClockGet(), SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 200000, 8);
   ROM_SSIEnable(SSI0_BASE);
   unsigned long ttt;
   while(ROM_SSIDataGetNonBlocking(SSI0_BASE, &ttt));
   ROM_GPIOPinWrite(VS_RESET_PORT,VS_RESET_PIN,VS_RESET_PIN);//disable hw reset
-  delay(40);
+  delay(10);
+  while(!vsDreq);
+  vsWriteReg(SCI_MODE,(1<<SM_RESET)|(1<<SM_SDINEW));
+  delay(3);
+  while(!vsDreq);
+  vsWriteReg(SCI_MODE,(1<<SM_SDINEW));
+
+#ifndef VS1053
   vsWriteReg(SCI_CLOCKF,0xe000);
+#else
+  vsWriteReg(SCI_CLOCKF,0x8800);
+#endif
   delay(10);
   ROM_SSIDisable(SSI0_BASE);
   ROM_SSIConfigSetExpClk(SSI0_BASE, SysCtlClockGet(), SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 4000000, 8);
   ROM_SSIEnable(SSI0_BASE);
-  delay(1);
+  delay(4);  
+#ifndef VS1053
   for(unsigned short int ii=0;ii<944;ii++)vsWriteReg(spectrum_atab[ii],spectrum_dtab[ii]);
+#else
+  unsigned short ii=0;
+  while (ii<sizeof(vs1053_patch)/sizeof(vs1053_patch[0])) {
+    unsigned short addr, n, val;
+    addr = vs1053_patch[ii++];
+    n = vs1053_patch[ii++];
+    if (n & 0x8000U) { /* RLE run, replicate n samples */
+      n &= 0x7FFF;
+      val = vs1053_patch[ii++];
+      while (n--) {
+        vsWriteReg(addr, val);
+      }
+    } 
+    else {           /* Copy run, copy n samples */
+      while (n--) {
+        val = vs1053_patch[ii++];
+        vsWriteReg(addr, val);
+      }
+    }
+  }
+#endif
 }
 
 unsigned short int vsReadReg(unsigned char regnum)
@@ -67,6 +100,7 @@ void vsWriteReg(unsigned char regnum, unsigned short int dat)
   VS_CS_LOW;
   unsigned long aaa;
 
+  while( !vsDreq );
   HWREG(SSI0_BASE + SSI_O_DR) = 0x02; //write register code
   while(!(HWREG(SSI0_BASE + SSI_O_SR) & SSI_SR_TNF));
   while(!(HWREG(SSI0_BASE + SSI_O_SR) & SSI_SR_RNE));
@@ -89,7 +123,7 @@ void vsWriteReg(unsigned char regnum, unsigned short int dat)
   aaa = (HWREG(SSI0_BASE + SSI_O_DR));
 
 
-  while( !(HWREG(VS_DREQ_PORT + (GPIO_O_DATA + (VS_DREQ_PIN << 2)))) );
+  while( !vsDreq );
   VS_CS_HIGH;
 }
 
@@ -99,7 +133,13 @@ void vsEndPlaying()
   vsWriteReg(SCI_MODE,(1<<SM_OUTOFWAV)|(1<<SM_SDINEW));
   unsigned long _a=100001L;
   unsigned char temp;
-  while((_a>0)&&(vsReadReg(SCI_HDAT1)!=0)){_a--; VS_DCS_LOW; vsWrite(0,temp); VS_DCS_HIGH;}
+  while((_a>0)&&(vsReadReg(SCI_HDAT1)!=0)){
+    _a--; 
+    VS_DCS_LOW; 
+    vsWrite(0,temp); 
+    VS_DCS_HIGH;
+  }
   vsWriteReg(SCI_MODE,(1<<SM_SDINEW));
 }
+
 
