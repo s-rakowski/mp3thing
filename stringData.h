@@ -1,5 +1,9 @@
 //Startup
+#ifdef VS1053
+static const char initvs_str[] = "Init VS1053\n";
+#else
 static const char initvs_str[] = "Init VS1003\n";
+#endif
 static const char initsd_str[] = "Init SD Card\n";
 static const char inittouch_str[] = "Init touchscreen\n";
 static const char initcal_str[] = "Reading settings\n";

@@ -60,7 +60,9 @@ void appPlasma()
    }
    t++;
    } 
-
+//Below is code(not mine, I only modified it to work with my LCD functions) to draw fancy bouncing Amiga ball
+//You may comment above plasma code and decomment the following to see it.
+//Works, but it is slow. About 5-6 fps.
   /* Derived from the 2011 IOCCC submission by peter.eastman@gmail.com
    * http://www.ioccc.org/2011/eastman/eastman.c
    * --

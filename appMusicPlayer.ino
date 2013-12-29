@@ -4,8 +4,10 @@ enum EndReasons{
   FILE_PREV,
   STOP_PRESSED
 };
-static const char (*bitrates1[])={"?","32","40","48","56","64","80","96","112","128","160","192","224","256","320","?"};
-static const char (*bitrates2[])={"?","8","16","24","32","40","48","56","64","80","96","112","128","144","160","?"};
+static const char (*bitrates1[])={
+  "?","32","40","48","56","64","80","96","112","128","160","192","224","256","320","?"};
+static const char (*bitrates2[])={
+  "?","8","16","24","32","40","48","56","64","80","96","112","128","144","160","?"};
 void appMusicPlayer()
 {
   FILINFO inf;
@@ -54,6 +56,9 @@ unsigned char playAudioFile(FIL& file)
   char nameString[256],tempbuf[10]; 
   unsigned short int nameStart=0,nameEnd; 
   byte hasInfo=0,notfound,temp,ii,isPlaying=1,lastVol=map(systemVol,254,0,30,231);
+#ifndef VS1053
+  byte isWav=0;
+#endif
   unsigned char spc[14];//spectrum data
   for(ii=0;ii<14;ii++)spc[ii]=0;
   fileSize=f_size(&file);
@@ -130,7 +135,7 @@ unsigned char playAudioFile(FIL& file)
   else for(ii=0;ii<31;ii++)nameString[ii]=0;
   if(strlen(nameString)>30)nameEnd=strlen(nameString)-29; 
   else nameEnd=1;
-  //vsWriteReg(SCI_VOL,systemVol|(systemVol<<8));
+  vsWriteReg(SCI_VOL,systemVol|(systemVol<<8));
   LCD_ResetWindow(); 
   LCD_Clear(BLACK); //space for ui
   LCD_HorLine(0,239,288,GREEN);
@@ -200,22 +205,34 @@ unsigned char playAudioFile(FIL& file)
       nameStart=(nameEnd==1) ? 0 : (nameStart+1)%nameEnd;
     }
     if(millis()%40==0){
-//      VS_DCS_HIGH;
-/*      if(!hasInfo)
+      VS_DCS_HIGH;
+      if(!hasInfo)
       {
         s=vsReadReg(SCI_HDAT1);
         if(s)
         {
           hasInfo=1;
-          if(s==0x7665)LCD_DrawString("WAV",10,200,GREEN);
+          if(s==0x7665)
+          {
+            LCD_DrawString("WAV",10,200,GREEN);
+#ifndef VS1053
+            isWav=1;
+#endif
+          }
           else if(s==0x574D)
           {
             LCD_DrawString("WMA",10,200,GREEN);
             s=vsReadReg(SCI_HDAT0);
             s/=128; //get kbps
             ii=0;
-            if(s>99){tempbuf[ii++]='0'+s/100; s%=100;}
-            if(s>9){tempbuf[ii++]='0'+s/10; s%=10;}
+            if(s>99){
+              tempbuf[ii++]='0'+s/100; 
+              s%=100;
+            }
+            if(s>9){
+              tempbuf[ii++]='0'+s/10; 
+              s%=10;
+            }
             tempbuf[ii++]='0'+s;
             tempbuf[ii++]=0;
             LCD_DrawString(tempbuf,45,200,GREEN);
@@ -228,31 +245,42 @@ unsigned char playAudioFile(FIL& file)
             s=vsReadReg(SCI_HDAT0);
             switch((s>>6)&3)
             {
-              case 0: LCD_DrawString("Stereo",75,200,GREEN); break;
-              case 1: LCD_DrawString("Joint Stereo",75,200,GREEN); break;
-              case 2: LCD_DrawString("Dual Channel",75,200,GREEN); break;
-              case 3: LCD_DrawString("Mono",75,200,GREEN); break;
+            case 0: 
+              LCD_DrawString("Stereo",75,200,GREEN); 
+              break;
+            case 1: 
+              LCD_DrawString("Joint Stereo",75,200,GREEN); 
+              break;
+            case 2: 
+              LCD_DrawString("Dual Channel",75,200,GREEN); 
+              break;
+            case 3: 
+              LCD_DrawString("Mono",75,200,GREEN); 
+              break;
             }
             s>>=12;
             s&=15;
             LCD_DrawString((ii==3) ? bitrates1[s] : bitrates2[s],45,200,GREEN);
           }
         } 
-      }*/
+      }
       //draw spectrum bars
 #ifndef VS1053
-      vsWriteReg(SCI_WRAMADDR,0x1384);
-      for(ii=0;ii<14;ii++)
+      if(!isWav)//vs1003 does not want to give spectrum when playing WAV
       {
-        temp=(vsReadReg(SCI_WRAM)&63)<<1;
-        if(temp<spc[ii])
-          LCD_Rectangle(1+(ii*17),179-spc[ii],17+(ii*17),179-temp,BLACK);
-        else
-          LCD_Rectangle(1+(ii*17),179-temp,17+(ii*17),179-spc[ii],GREEN);
-        spc[ii]=temp;
+        vsWriteReg(SCI_WRAMADDR,0x1384);
+        for(ii=0;ii<14;ii++)
+        {
+          temp=(vsReadReg(SCI_WRAM)&63)<<1;
+          if(temp<spc[ii])
+            LCD_Rectangle(1+(ii*17),179-spc[ii],17+(ii*17),179-temp,BLACK);
+          else
+            LCD_Rectangle(1+(ii*17),179-temp,17+(ii*17),179-spc[ii],GREEN);
+          spc[ii]=temp;
+        }
       }    
 #endif
-//      VS_DCS_LOW;
+      VS_DCS_LOW;
     }
     //draw position bar
     curPos=map(f_tell(&file)>>3,0,fileSize>>3,0,232); //Max file size is still ~70MB. At least I don't have that large audio files.
@@ -317,6 +345,8 @@ unsigned char playAudioFile(FIL& file)
     }
   }
 }
+
+
 
 
 

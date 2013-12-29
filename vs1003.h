@@ -1,4 +1,4 @@
-#define VS1053
+//#define VS1053
 //Use vs1053 instead of vs1003
 
 //VS1003 control pins

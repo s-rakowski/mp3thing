@@ -1,3 +1,15 @@
+/*
+Icons source:
+FatCow Farm Fresh Icons
+
+03/29/2013, v3.5.0, 9.12 Mb
+
+© Copyright 2013 FatCow Web Hosting. All rights reserved.
+
+These icons are licensed under a Creative Commons
+Attribution 3.0 License.
+http://creativecommons.org/licenses/by/3.0/us/
+*/
 static const unsigned char iconFolder[512]=
 {
 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,

@@ -247,8 +247,6 @@ void LCD_VerLine(unsigned short int y1, unsigned short int y2, byte x, unsigned 
   for (unsigned short int i=y1; i <= y2; i++){
     LCD_WriteData(color);
   }
-  
-//  LCD_SolidFill((y2-y1), color);  // This is a faster method
   LCD_ResetWindow();
 }  
 
@@ -281,6 +279,8 @@ void LCD_Clear_ScrollDown(byte delay_between, unsigned short int color)
   LCD_HardwareScroll(0);  
 } 
 
+//This fancy procedure was taken from an example of interfacing a LCD module to Arduino Mega
+//Sadly I can not find the URL anywhere but I am pretty sure its origin is the code of "Microtouch" project
 int LCD_DrawChar(byte xx, unsigned short int yy, int c, unsigned short int color)
 {
     //byte* f = Verdana_font_11;

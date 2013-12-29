@@ -1,3 +1,7 @@
+//Sadly we won't have the ModPlayer anymore
+//It uses a lot of precious resources while being almost useless. It won't play my favourite mods anyway :(
+//I won't remove it completly if anybody wants to play with this.
+/*
 //shared
 #define BITDEPTH 16                               // 11 bits PWM
 #define SAMPLERATE 44100 //(SYSCLK / (1 << BITDEPTH))     // Best audio quality 96MHz / (1 << 11) = 46875Hz
@@ -1943,7 +1947,7 @@ void appTest2()
   VS_DCS_LOW;
   unsigned char temp,aa;
   fileDialog(file,dir);
-  //  S3M_Player *ModPlayer = new S3M_Player();
+  //S3M_Player *ModPlayer = new S3M_Player();
   ModPlayer.loadMod();
   consoleReset();
   consolePuts(ModPlayer.Mod.name);
@@ -1989,6 +1993,6 @@ void appTest2()
   VS_DCS_HIGH;
   vsEndPlaying();
   LCD_ResetWindow();
-  //  delete ModPlayer;
+  //delete ModPlayer;
 }
-
+*/

@@ -62,7 +62,7 @@ void appSlide()
         }
         upPos+=(y1-y2)*480;
       }
-      else if (upPos>0)//go up
+      else if (y1<y2 && upPos>0)//go up
       {
         if((y2-y1)*480>upPos) y2=y1+upPos/480;
         upPos-=(y2-y1)*480;

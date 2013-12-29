@@ -24,19 +24,21 @@
 #include "stringData.h"
 FATFS fatfs;
 FIL file; DIR dir;//shared
-#define numApps 7
+#define numApps 6
 void (*appList[numApps])() = {
-  appCalibrate,appMinipaint,appPicViewer,appSlide,appMusicPlayer,appPlasma,appTest2};
+  appCalibrate,appMinipaint,appPicViewer,appSlide,appMusicPlayer,appPlasma};
 static const char (*appNames[numApps]) = {
-  appCalibrateName,appMinipaintName,appPicViewerName,appSlideName,appMusicPlayerName,appPlasmaName,appTest2Name};
+  appCalibrateName,appMinipaintName,appPicViewerName,appSlideName,appMusicPlayerName,appPlasmaName};
 
-byte j,k,systemVol=0;
+byte j,k,systemVol=40;
 unsigned int i;
+
 void FatInt()
 {
   HWREG(TIMER0_BASE + TIMER_O_ICR) = TIMER_TIMA_TIMEOUT;
   disk_timerproc();
 }
+
 void setup()
 {
   Serial.begin(115200);
@@ -77,15 +79,7 @@ void setup()
   }
   consolePuts(initvs_str);
   vsInit();
-/*  f_open(&file,"TB_DES~1.OGG",FA_READ);
-  UINT n=3; BYTE xx[32];unsigned short temp;
-  VS_CS_HIGH;VS_DCS_LOW;
-  while(n)
-  {
-    if(vsDreq){
-    f_read(&file,xx,32,&n);
-    for(i=0;i<n;i++) vsWrite(xx[i],temp);}
-  }*/
+  
   //Check for touch calibration data in internal EEPROM
   consolePuts(initcal_str);
   long unsigned int calD[5];
